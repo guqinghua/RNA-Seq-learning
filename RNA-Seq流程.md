@@ -1,5 +1,7 @@
 # RNA-seq流程
+
 # 1.前期准备
+
 在c盘建立文件夹
 ```
 cd /mnt/c
@@ -19,6 +21,7 @@ tree
 ```
 #安装
 brew reinstall sratoolkit
+
 #验证是否安装成功
 prefetch --help
 ```
@@ -55,6 +58,7 @@ fastq-dump [options] <path/file>
 ```
 #安装
 brew reinstall fastqc
+
 #验证是否安装成功
 $ fastqc -v
 FastQC v0.12.1
@@ -63,6 +67,7 @@ FastQC v0.12.1
 ```
 # 使用python的安装器安装
 pip install 
+
 #验证是否安装成功
 multiqc --help
 ```
@@ -70,6 +75,7 @@ multiqc --help
 ```
 #安装
 pip install cutadapt 
+
 #验证是否安装成功
 $ cutadapt --version
 4.4
@@ -121,6 +127,8 @@ vim ~/.bashrc
 在界面中输入
 # hisat2
 export PATH="/mnt/c/project/biosoft/hisat2-2.2.1:$PATH"
+# 刷新
+source ~/.bashrc
 
 # 测试是否可用
 $ hisat2 -h
@@ -147,9 +155,9 @@ R studio 可以在 Windows 下安装; 选择版本下载,下载完成之后双�
 ```
 brew install parallel
 ```
-## 3.数据下载
-### 3.1基因组数据
-1. [ensemble网址]（https://asia.ensembl.org/)，在左侧五中中选择``Rat``; 在左侧Download DNA sequence (FASTA) 下载基因组序列数据; 在右侧的Download GTF or GFF3 (files for genes, cDNAs, ncRNA, proteins)下载基因注释文件。
+## 3. 数据下载
+### 3.1 基因组数据
+1. [ensemble网址](https://asia.ensembl.org/)，在左侧五中中选择``Rat``; 在左侧Download DNA sequence (FASTA) 下载基因组序列数据; 在右侧的Download GTF or GFF3 (files for genes, cDNAs, ncRNA, proteins)下载基因注释文件。
 
 可以直接在网页下载，也可用代码
 ```
@@ -190,7 +198,7 @@ $ cat mRatBN7.2.raw.fa | perl -n -e 'if(m/^>(.+?)(?:\s|$)/){ print ">$1\n";}else
 # 删除
 $ rm mRatBN7.2.raw.fa
 ```
-### 下载注释信息
+### 3.2 下载注释信息
 ```
 # 下载 gff3 格式
 cd /mnt/c/project/rat/annotation
@@ -208,7 +216,7 @@ cd /mnt/c/project/rat/annotation
 wget http://ftp.ensembl.org/pub/release-107/gtf/rattus_norvegicus/Rattus_norvegicus.mRatBN7.2.107.gtf.gz
 gzip -d Rattus_norvegicus.mRatBN7.2.107.gtf.gz
 ```
-## 下载RNA-SEQ数据
+### 3.3 下载RNA-SEQ数据
 ```
 cd /mnt/c/project/rat/sequence
 prefetch SRR2190795 SRR224018{2..7} SRR2240228
@@ -225,7 +233,6 @@ SRR2240187
 SRR2240228
 EOF
 prefetch --option-file 1.txt
-
 ```
 
 格式转换
@@ -294,11 +301,17 @@ CAGCCATTGTGGCTCCCGATGGCTTTGACATCATTGACATGACAGCCGGAGGTCAGATAAACTNNNNNNNNNNNNNNNNN
 # fastqc [-o output dir] [--(no)extract] [-f fastq|bam|sam] [-c contaminant file] seqfile1 .. seqfileN
 
 # 主要是包括前面的各种选项和最后面的可以加入N个文件
+
 # -o --outdir FastQC生成的报告文件的储存路径，生成的报告的文件名是根据输入来定的
+
 # --extract 生成的报告默认会打包成1个压缩文件，使用这个参数是让程序不打包
+
 # -t --threads 选择程序运行的线程数，每个线程会占用250MB内存，越多越快咯
+
 # -c --contaminants 污染物选项，输入的是一个文件，格式是Name [Tab] Sequence，里面是可能的污染序列，如果有这个选项，FastQC会在计算时候评估污染的情况，并在统计的时候进行分析，一般用不到
+
 # -a --adapters 也是输入一个文件，文件的格式Name [Tab] Sequence，储存的是测序的adpater序列信息，如果不输入，目前版本的FastQC就按照通用引物来评估序列时候有adapter的残留
+
 # -q --quiet 安静运行模式，一般不选这个选项的时候，程序会实时报告运行的状况。
 ```
 2. 输入代码
@@ -372,15 +385,18 @@ parallel -j 4 "
 java -jar /mnt/c/project/biosoft/Trimmomatic-0.38/Trimmomatic-0.38.jar \                                                       SE -phred33 {1} ../trim/{1} \
 LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30 \
 " ::: $( ls *.gz)
+
 # 本命令逻辑  
 java -jar  [Trimmomatic软件存储位置]\   #-jar 执行封装在 JAR 存档中的程序
    [单端测序] SE -phred33 {变量名称}      [指明存储路径和名称] ../trim/{变量名称}\
    Trimmomatic软件的命令选项  
 
+
 # LEADING:20，从序列的开头开始去掉质量值小于 20 的碱基
 # TRAILING:20，从序列的末尾开始去掉质量值小于 20 的碱基
 # SLIDINGWINDOW:5:15，从 5' 端开始以 5bp 的窗口计算碱基平均质量，如果此平均值低于 15，则从这个位置截断read
 # MINLEN:30， 如果 reads 长度小于 30bp 则扔掉整条 read。
+
 
 #或者运行下面的代码也可以
 parallel -j 4 " trimmomatic SE -phred33 {1} ../trim/{1}  LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30 " :::$(ls *.gz)
@@ -472,22 +488,25 @@ parallel -k -j 2 "
 
 
 ## 正确的做法
-```
-##  1. for循环
-由于内存占用太大，占满了，程序跑不起来，所以吴师兄帮忙写了一个``for循环``，程序正常运行。我把index索引文件，输入文件和输出文件放到了同一个文件夹里面。（看到网上说在同一个文件夹里面报错的可能性小一些。）
 
+* for循环
+
+由于内存占用太大，占满了，程序跑不起来，所以吴师兄帮忙写了一个``for循环``，程序正常运行。我把index索引文件，输入文件和输出文件放到了同一个文件夹里面。（看到网上说在同一个文件夹里面报错的可能性小一些。）
+```
 guoqinghua@DESKTOP-VPR0E67:/mnt/c/project/rat/output/trim$ for i in $(ls *.gz | perl -p -e 's/.fastq.gz$//')
 > do
 > hisat2 -t -x mRatBN7.2 -U ${i}.fastq.gz -S ${i}.sam 2>../align/${i}.log
 > done
-
-##  2.一个一个单独运行。
-索引文件和输入输出文件不在同一个文件夹里面。界面输出信息写入到日志中
+```
+* 一个一个单独运行。索引文件和输入输出文件不在同一个文件夹里面。界面输出信息写入到日志中
+```
 guoqinghua@DESKTOP-VPR0E67:/mnt/c/project/rat/output/trim$ hisat2 -t -x ../../genome/index/mRatBN7.2 -U SRR2190795.fastq.gz -S ../align/SRR2190795.sam 2>../align/SRR2190795.log
-
-##  3.一个一个单独运行。
+```
+* 3.一个一个单独运行。
 索引文件和输入输出文件不在同一个文件夹里面。界面输出信息未写入到日志中，程序跑完之后在终端界面显示。
+```
 guoqinghua@DESKTOP-VPR0E67:/mnt/c/project/rat/output/trim$ hisat2 -t -x ../../genome/index/mRatBN7.2 -U SRR2240187.fastq.gz -S ../align/SRR2240187.sam
+
 Time loading forward index: 00:01:51
 Time loading reference: 00:00:03
 Multiseed full-index search: 00:36:11
@@ -613,7 +632,7 @@ for(i in seq(2, length(id_list))){
 }
 
 write.csv(data_merge, "merge.csv", quote = FALSE, row.names = FALSE)
-
+```
 表格在HTseq文件夹中
 #### 8.2 数据标准化
 
@@ -651,7 +670,7 @@ Error: package or namespace load failed for ‘GenomicFeatures’ in loadNamespa
  不存在叫‘prettyunits’这个名字的程辑包
 
 >BiocManager::install("prettyunits")
-....
+...
 Error in download.file(url, destfile, method, mode = "wb", ...) : 
   cannot open URL 'https://cran.rstudio.com/bin/windows/contrib/4.3/prettyunits_1.1.1.zip'
 In addition: Warning message:
@@ -662,8 +681,13 @@ Warning in download.packages(pkgs, destdir = tmpd, available = available,  :
 ```
 可以参考以下网址，修改配置。
 Win+R，输入inetcpl.cpl 直接打开Internet选项。打开后，在高级中勾选使用TLS 1.0、使用TLS 1.1、使用TLS 1.2。
+
 但其实修改完，关闭防火墙之后有时也还是不行，多安装几次就可以安装上了，可能是网络不稳定问题。
+
+参考网址：
+
 https://www.cnblogs.com/miyuanbiotech/p/14077003.html
+
 https://www.zhihu.com/question/48323000
 
 R语言中设置工作路径
